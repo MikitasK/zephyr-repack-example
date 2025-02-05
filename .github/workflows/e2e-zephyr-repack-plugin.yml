@@ -96,15 +96,19 @@ jobs:
 
       - name: Generate Job Log Links
         id: collect-logs
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          IOS_JOB_ID=$(jq -r '.jobs[] | select(.name=="zephyr-deployment-ios") | .id' <<< $(gh run view ${{ github.run_id }} --json jobs))
-          ANDROID_JOB_ID=$(jq -r '.jobs[] | select(.name=="zephyr-deployment-android") | .id' <<< $(gh run view ${{ github.run_id }} --json jobs))
+          # Get job details from GitHub API
+          JOBS_JSON=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs --jq '.jobs')
 
+          # Extract job IDs based on job names
+          IOS_JOB_ID=$(echo "$JOBS_JSON" | jq -r '.[] | select(.name == "zephyr-deployment-ios") | .id')
+          ANDROID_JOB_ID=$(echo "$JOBS_JSON" | jq -r '.[] | select(.name == "zephyr-deployment-android") | .id')
+
+          # Construct job log URLs
           echo "IOS_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${IOS_JOB_ID}" >> $GITHUB_ENV
           echo "ANDROID_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${ANDROID_JOB_ID}" >> $GITHUB_ENV
-
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report Results to `zephyr-packages`
         uses: actions/github-script@v6
