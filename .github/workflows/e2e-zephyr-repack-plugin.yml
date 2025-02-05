@@ -84,11 +84,29 @@ jobs:
           echo "IOS_TESTS=${{ needs.ios-tests.result }}" >> $GITHUB_ENV
           echo "ZE_DEPLOYMENT_ANDROID=${{ needs.zephyr-deployment-android.result }}" >> $GITHUB_ENV
           echo "ANDROID_TESTS=${{ needs.android-tests.result }}" >> $GITHUB_ENV
-          echo "IOS_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
-          echo "ANDROID_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+
+          if [[ "${{ needs.zephyr-deployment-ios.result }}" == "success" && \
+                "${{ needs.ios-tests.result }}" == "success" && \
+                "${{ needs.zephyr-deployment-android.result }}" == "success" && \
+                "${{ needs.android-tests.result }}" == "success" ]]; then
+            echo "WORKFLOW_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "WORKFLOW_STATUS=failure" >> $GITHUB_ENV
+          fi
+
+      - name: Generate Job Log Links
+        id: collect-logs
+        run: |
+          IOS_JOB_ID=$(jq -r '.jobs[] | select(.name=="zephyr-deployment-ios") | .id' <<< $(gh run view ${{ github.run_id }} --json jobs))
+          ANDROID_JOB_ID=$(jq -r '.jobs[] | select(.name=="zephyr-deployment-android") | .id' <<< $(gh run view ${{ github.run_id }} --json jobs))
+
+          echo "IOS_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${IOS_JOB_ID}" >> $GITHUB_ENV
+          echo "ANDROID_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${ANDROID_JOB_ID}" >> $GITHUB_ENV
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report Results to `zephyr-packages`
-        if: always()
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GH_TOKEN }}
@@ -99,7 +117,7 @@ jobs:
               workflow_id: 'zephyr_repack_plugin_e2e_results.yml',
               ref: 'ci/zephyr-repack-plugin-e2e-trigger',
               inputs: {
-                workflow_status: "${{ job.status }}",
+                workflow_status: "${{ env.WORKFLOW_STATUS }}",
                 commit_sha: "${{ github.sha }}",
                 run_url: "https://github.com/MikitasK/zephyr-repack-example/actions/runs/${{ github.run_id }}",
                 zephyr_deployment_ios_status: "${{ env.ZE_DEPLOYMENT_IOS }}",
