@@ -126,7 +126,6 @@ jobs:
               ref: 'ci/zephyr-repack-plugin-e2e-trigger',
               inputs: {
                 workflow_status: "${{ env.WORKFLOW_STATUS }}",
-                commit_sha: "${{ github.sha }}",
                 run_url: "https://github.com/MikitasK/zephyr-repack-example/actions/runs/${{ github.run_id }}",
                 zephyr_deployment_ios_status: "${{ env.ZE_DEPLOYMENT_IOS }}",
                 ios_tests_status: "${{ env.IOS_TESTS }}",
