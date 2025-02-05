@@ -35,7 +35,7 @@ jobs:
               inputs: {
                 workflow_status: "${{ job.status }}",
                 commit_sha: "${{ github.sha }}",
-                run_url: "https://github.com/ZephyrCloudIO/zephyr-repack-example/actions/runs/${{ github.run_id }}"
+                run_url: "https://github.com/MikitasK/zephyr-repack-example/actions/runs/${{ github.run_id }}"
               }
             });    
 
