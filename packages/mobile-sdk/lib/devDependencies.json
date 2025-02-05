@@ -16,22 +16,22 @@
   },
   "@callstack/repack": {
     "name": "@callstack/repack",
-    "version": "5.0.0-rc.8",
+    "version": "5.0.0-rc.10",
     "devOnly": true
   },
   "@react-native/babel-preset": {
     "name": "@react-native/babel-preset",
-    "version": "0.76.1",
+    "version": "0.76.6",
     "devOnly": true
   },
   "@react-native/eslint-config": {
     "name": "@react-native/eslint-config",
-    "version": "0.76.1",
+    "version": "0.76.6",
     "devOnly": true
   },
   "@react-native/typescript-config": {
     "name": "@react-native/typescript-config",
-    "version": "0.76.1",
+    "version": "0.76.6",
     "devOnly": true
   },
   "@react-native-community/cli": {
@@ -106,12 +106,7 @@
   },
   "zephyr-repack-plugin": {
     "name": "zephyr-repack-plugin",
-    "version": "0.0.0-canary-20241121202227",
-    "devOnly": true
-  },
-  "@rsdoctor/rspack-plugin": {
-    "name": "@rsdoctor/rspack-plugin",
-    "version": "^0.4.13",
+    "version": "0.0.0-canary-20250130213446",
     "devOnly": true
   }
 }
