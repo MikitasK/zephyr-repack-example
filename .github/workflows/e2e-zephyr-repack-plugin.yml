@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  e2e-tests:
+
+  zephyr-deployment-ios:
     runs-on: ubuntu-latest
     steps:
       - name: Run E2E Tests
@@ -21,7 +22,72 @@ jobs:
             exit 1
           fi
 
-      - name: Trigger Results Workflow in `zephyr-packages` repo
+  ios-tests:
+    needs: zephyr-deployment-ios
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run E2E Tests
+        run: |
+          echo "Running E2E tests..."
+          # Simulate test failure or success
+          if [ $((RANDOM % 2)) -eq 0 ]; then
+            echo "Tests passed!"
+            exit 0
+          else
+            echo "Tests failed!"
+            exit 1
+          fi
+
+  zephyr-deployment-android:
+    if: always()
+    needs: ios-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run E2E Tests
+        run: |
+          echo "Running E2E tests..."
+          # Simulate test failure or success
+          if [ $((RANDOM % 2)) -eq 0 ]; then
+            echo "Tests passed!"
+            exit 0
+          else
+            echo "Tests failed!"
+            exit 1
+          fi
+
+  android-tests:
+    if: always()
+    needs: zephyr-deployment-android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run E2E Tests
+        run: |
+          echo "Running E2E tests..."
+          # Simulate test failure or success
+          if [ $((RANDOM % 2)) -eq 0 ]; then
+            echo "Tests passed!"
+            exit 0
+          else
+            echo "Tests failed!"
+            exit 1
+          fi
+
+  report-status:
+    if: always()
+    needs: [zephyr-deployment-ios, ios-tests, zephyr-deployment-android, android-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Job Statuses and Log Links
+        id: collect-status
+        run: |
+          echo "ZE_DEPLOYMENT_IOS=${{ needs.zephyr-deployment-ios.result }}" >> $GITHUB_ENV
+          echo "IOS_TESTS=${{ needs.ios-tests.result }}" >> $GITHUB_ENV
+          echo "ZE_DEPLOYMENT_ANDROID=${{ needs.zephyr-deployment-android.result }}" >> $GITHUB_ENV
+          echo "ANDROID_TESTS=${{ needs.android-tests.result }}" >> $GITHUB_ENV
+          echo "IOS_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+          echo "ANDROID_LOGS=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Report Results to `zephyr-packages`
         if: always()
         uses: actions/github-script@v6
         with:
@@ -35,41 +101,12 @@ jobs:
               inputs: {
                 workflow_status: "${{ job.status }}",
                 commit_sha: "${{ github.sha }}",
-                run_url: "https://github.com/MikitasK/zephyr-repack-example/actions/runs/${{ github.run_id }}"
+                run_url: "https://github.com/MikitasK/zephyr-repack-example/actions/runs/${{ github.run_id }}",
+                zephyr_deployment_ios_status: "${{ env.ZE_DEPLOYMENT_IOS }}",
+                ios_tests_status: "${{ env.IOS_TESTS }}",
+                zephyr_deployment_android_status: "${{ env.ZE_DEPLOYMENT_ANDROID }}",
+                android_tests_status: "${{ env.ANDROID_TESTS }}",
+                ios_logs_url: "${{ env.IOS_LOGS }}",
+                android_logs_url: "${{ env.ANDROID_LOGS }}"
               }
-            });    
-
-#  zephyr-deployment-ios:
-#    uses: ./.github/workflows/zephyr-deployment.yml
-#    with:
-#      platform: ios
-#    secrets:
-#      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-#
-#  ios-tests:
-#    needs: zephyr-deployment-ios
-#    uses: ./.github/workflows/e2e-ios.yml
-#    secrets:
-#      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-#    with:
-#      build-zephyr-repack-plugin-locally: true
-#
-#  zephyr-deployment-android:
-#    if: always()
-#    needs: ios-tests
-#    uses: ./.github/workflows/zephyr-deployment.yml
-#    with:
-#      platform: android
-#    secrets:
-#      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-#
-#  android-tests:
-#    if: always()
-#    needs: zephyr-deployment-android
-#    uses: ./.github/workflows/e2e-android.yml
-#    secrets:
-#      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-#    with:
-#      build-zephyr-repack-plugin-locally: true
-
-
+            });
